@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Hands-Free Grading Deck</title>
+    <style>
+        :root {
+            --bg-slate: #f8fafc;
+            --border-slate: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --indigo-core: #4f46e5;
+            --emerald-green: #10b981;
+            --amber-warn: #f59e0b;
+            --crimson-fail: #ef4444;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-slate); color: var(--text-dark); margin: 0; padding: 24px;
+        }
+        .app-wrapper { max-width: 1200px; margin: 0 auto; }
+        .main-header {
+            background: #ffffff; border: 1px solid var(--border-slate);
+            padding: 24px; border-radius: 16px; margin-bottom: 24px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .db-badge {
+            background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+            font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px;
+        }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .panel-card { background: #ffffff; border: 1px solid var(--border-slate); border-radius: 16px; padding: 24px; }
+        h3 { margin-top: 0; font-size: 18px; font-weight: 700; border-bottom: 1px solid var(--border-slate); padding-bottom: 12px; margin-bottom: 16px; }
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-top: 16px; margin-bottom: 6px; }
+        input[type="file"] { width: 100%; padding: 12px; border: 1px solid var(--border-slate); border-radius: 8px; box-sizing: border-box; font-size: 14px; background: #fafafa; }
+        .btn-submit { width: 100%; background: var(--indigo-core); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 20px; }
+        .btn-history { width: 100%; background: #ffffff; color: var(--indigo-core); border: 1px solid var(--indigo-core); padding: 10px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; margin-top: 10px; }
+        .loading-spinner { display: none; color: var(--indigo-core); font-weight: 600; padding: 16px; background: #f5f3ff; border: 1px dashed var(--indigo-core); border-radius: 8px; text-align: center; margin-bottom: 16px; font-size: 14px; }
+        .metric-badge { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 12px; margin-bottom: 12px; }
+        .game-badge { background: #f5f3ff; border: 1px solid #ddd6fe; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
+        .question-card { background: #f8fafc; border: 1px solid var(--border-slate); border-radius: 10px; padding: 16px; margin-bottom: 12px; position: relative; }
+        .type-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-left: 4px; }
+        .tag-mcq { background: #e0f2fe; color: #0369a1; }
+        .tag-theory { background: #fef3c7; color: #b45309; }
+        .tag-section { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .quest-tag { float: right; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
+        .quest-perfect { background: #d1fae5; color: #065f46; }
+        .quest-active { background: #fee2e2; color: #991b1b; }
+        .quest-review { background: #fef3c7; color: #d97706; }
+        .debugging-quest-box { margin-top: 10px; background: #fffbeb; border-left: 4px solid var(--amber-warn); padding: 10px; border-radius: 0 6px 6px 0; font-size: 12px; }
+        .hitl-override-input { width: 60px; font-weight: 700; padding: 4px; border: 1px solid var(--amber-warn); border-radius: 4px; text-align: center; font-size: 14px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <header class="main-header">
+        <div>
+            <h1 style="margin:0; font-size: 22px; font-weight: 800;">Hands-Free AI Section-Aware Pipeline</h1>
+            <p style="margin:4px 0 0 0; font-size:13px; color: var(--text-muted);">
+                Intelligent sectional rules compilation, option optimization matching, and dynamic grading thresholds.
+            </p>
+        </div>
+        <span class="db-badge">🟢 DB Persisted</span>
+    </header>
+
+    <div class="dashboard-grid">
+        <main class="panel-card">
+            <h3>📂 Structural Image Uploads</h3>
+            <form id="autonomousForm" onsubmit="executeTwinStreamPipeline(event)">
+                <label>1. Upload Master Question Paper (Multi-Page Supported)</label>
+                <input type="file" id="questionPaperFile" accept="image/*" multiple required>
+
+                <label>2. Upload Student Answer Sheet Scan (Multi-Page Supported)</label>
+                <input type="file" id="answerSheetFile" accept="image/*" multiple required>
+
+                <button type="submit" class="btn-submit">Launch Cross-Image Assessment</button>
+            </form>
+
+            <button class="btn-history" onclick="fetchDatabaseHistory()">📜 Load Saved DB History</button>
+        </main>
+
+        <aside class="panel-card" style="display:flex; flex-direction:column;">
+            <h3>📊 Evaluation Diagnostics Output</h3>
+            <div id="spinner" class="loading-spinner">
+                🧠 Gemini is cross-referencing layout metrics... saving results to DB...
+            </div>
+            <div id="outputContainer" style="flex-grow:1;">
+                <p style="color:var(--text-muted); font-size:14px; text-align:center; padding-top:40px;">
+                    Select target inputs to run live execution.
+                </p>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://127.0.0.1:8000';
+
+    async function executeTwinStreamPipeline(event) {
+        event.preventDefault();
+        const paperField = document.getElementById('questionPaperFile');
+        const sheetField = document.getElementById('answerSheetFile');
+        const spinner = document.getElementById('spinner');
+        const outputBox = document.getElementById('outputContainer');
+
+        if (paperField.files.length === 0 || sheetField.files.length === 0) return;
+
+        spinner.style.display = 'block';
+        outputBox.innerHTML = '';
+        const payloadForm = new FormData();
+
+        for (let i = 0; i < paperField.files.length; i++) payloadForm.append('question_paper', paperField.files[i]);
+        for (let i = 0; i < sheetField.files.length; i++) payloadForm.append('answer_sheet', sheetField.files[i]);
+
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/grade-autonomous`, { method: 'POST', body: payloadForm });
+            if (!response.ok) throw new Error(`Server returned status level: ${response.status}`);
+
+            const metricsData = await response.json();
+            renderDynamicMetricsView(metricsData);
+
+            if (metricsData.level_up_unlocked) {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            }
+        } catch (err) {
+            outputBox.innerHTML = `
+                <div style="background:#fff1f2; border:1px solid #fecdd3; color:#9f1239; padding:16px; border-radius:8px; font-size:14px;">
+                    <strong>Core Execution Halted</strong><br>${err.message}<br><br>
+                    Make sure your FastAPI server is active in the terminal window.
+                </div>`;
+        } finally { spinner.style.display = 'none'; }
+    }
+
+    function renderDynamicMetricsView(payload) {
+        const outputBox = document.getElementById('outputContainer');
+        
+        let template = `
+            <div class="metric-badge">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-size:11px; text-transform:uppercase; font-weight:700; color:var(--text-muted);">Student Identifier</span>
+                        <h2 style="margin:2px 0 0 0; font-size:20px; font-weight:800;">${payload.student_id || 'Autodetected Identity'}</h2>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-size:11px; text-transform:uppercase; font-weight:700; color:var(--text-muted);">Total Graded Marks</span>
+                        <h2 style="margin:2px 0 0 0; font-size:24px; font-weight:900; color:var(--emerald-green);">
+                            <span id="liveTotalScore">${payload.total_score}</span> / <span id="liveMaxMarks">${payload.max_paper_marks}</span>
+                        </h2>
+                    </div>
+                </div>
+            </div>
+            <div class="game-badge">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-size:11px; text-transform:uppercase; font-weight:700; color:#7c3aed;">Cumulative XP Gains</span>
+                        <h2 id="liveTotalXP" style="margin:2px 0 0 0; font-size:20px; font-weight:800; color:#6d28d9;">✨ ${payload.total_xp} XP</h2>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-size:11px; text-transform:uppercase; font-weight:700; color:#7c3aed;">Rank Progression</span>
+                        <h2 id="liveLevelStatus" style="margin:2px 0 0 0; font-size:16px; font-weight:800;">
+                            ${payload.level_up_unlocked ? '🔥 LEVEL UP UNLOCKED!' : '📈 Progressing...'}
+                        </h2>
+                    </div>
+                </div>
+            </div>
+            <h4 style="font-size:12px; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">Dynamic Sectional Performance Log</h4>
+        `;
+
+        payload.assessments.forEach((q, index) => {
+            const tagStyle = q.question_type.toLowerCase() === 'mcq' ? 'tag-mcq' : 'tag-theory';
+            const isBuggy = q.gamification.is_buggy;
+            const evalId = q.id || (index + 1); // Database record ID
+            
+            let statusLabel = isBuggy ? '⚔️ Quest Active' : '💎 Perfect';
+            let statusClass = isBuggy ? 'quest-active' : 'quest-perfect';
+            let cardLeftBorderColor = isBuggy ? 'var(--crimson-fail)' : 'var(--emerald-green)';
+
+            template += `
+                <div class="question-card" style="border-left: 4px solid ${cardLeftBorderColor};">
+                    <span class="quest-tag ${statusClass}">${statusLabel}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div>
+                            <strong style="font-size:15px;">Question ${q.question_number}</strong>
+                            <span class="type-tag tag-section">Sec ${q.section_identifier}</span>
+                            <span class="type-tag ${tagStyle}">${q.question_type}</span>
+                        </div>
+                        <div>
+                            Score: <input type="number" class="hitl-override-input" data-index="${index}" data-eval-id="${evalId}" min="0" max="${q.max_possible_marks}" step="0.5" value="${q.marks_awarded}"> / ${q.max_possible_marks}
+                        </div>
+                    </div>
+                    <div style="font-size:13px; color:#334155; margin-bottom:6px;">
+                        <strong>Extracted Content:</strong> <span style="font-style:italic;">"${q.extracted_student_input || 'No input detected.'}"</span>
+                    </div>
+                    <div style="font-size:12px; color:var(--text-muted); background:#ffffff; padding:8px; border-radius:6px; border:1px solid var(--border-slate);">
+                        <strong>Justification:</strong> ${q.justification}
+                    </div>
+            `;
+
+            if (isBuggy) {
+                template += `
+                    <div class="debugging-quest-box">
+                        <strong style="color:#b45309;">🪲 Detected Bug:</strong> ${q.gamification.bug_description}
+                        <div style="margin-top: 4px; font-weight:700; color:var(--text-dark);">${q.gamification.quest_directive}</div>
+                    </div>`;
+            }
+            template += `</div>`; 
+        });
+
+        outputBox.innerHTML = template;
+
+        // Attach event listeners for real-time recalculation and Database Sync
+        document.querySelectorAll('.hitl-override-input').forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const itemIdx = e.target.getAttribute('data-index');
+                const evalId = e.target.getAttribute('data-eval-id');
+                const newScore = parseFloat(e.target.value) || 0;
+                
+                // Update Local State
+                payload.assessments[itemIdx].marks_awarded = newScore;
+                payload.assessments[itemIdx].gamification.xp_earned = newScore > 0 ? 10 : 0;
+                
+                // Send PUT request to persist score override into SQLite Database
+                try {
+                    await fetch(`${API_BASE}/api/v1/question-evaluation/${evalId}/override?new_score=${newScore}`, {
+                        method: 'PUT'
+                    });
+                } catch (err) {
+                    console.warn('Database sync skipped:', err);
+                }
+
+                // Recalculate frontend totals dynamically
+                let combinedScore = 0;
+                let combinedXP = 0;
+                payload.assessments.forEach(item => {
+                    combinedScore += item.marks_awarded;
+                    combinedXP += item.gamification.xp_earned;
+                });
+                
+                const ceilingValue = parseFloat(payload.max_paper_marks);
+                if (combinedScore > ceilingValue) combinedScore = ceilingValue;
+                
+                const expectedMaxXP = payload.assessments.length * 10;
+                if (combinedXP > expectedMaxXP) combinedXP = expectedMaxXP;
+                
+                const currentXpThreshold = parseInt(expectedMaxXP * 0.75);
+                
+                document.getElementById('liveTotalScore').innerText = combinedScore.toFixed(1);
+                document.getElementById('liveTotalXP').innerText = `✨ ${combinedXP} XP`;
+                
+                if (combinedXP >= currentXpThreshold) {
+                    document.getElementById('liveLevelStatus').innerText = '🔥 LEVEL UP UNLOCKED!';
+                } else {
+                    document.getElementById('liveLevelStatus').innerText = '📈 Progressing...';
+                }
+            });
+        });
+    }
+
+    // Fetch and display historical records directly from the database
+    async function fetchDatabaseHistory() {
+        const outputBox = document.getElementById('outputContainer');
+        try {
+            const res = await fetch(`${API_BASE}/api/v1/assessments`);
+            if (!res.ok) throw new Error('Failed to fetch history');
+            const history = await res.json();
+
+            if (history.length === 0) {
+                outputBox.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding-top:20px;">No saved database records found yet.</p>`;
+                return;
+            }
+
+            let html = `<h3>📜 Database Evaluation History</h3>`;
+            history.forEach(item => {
+                html += `
+                    <div style="background:#ffffff; border:1px solid var(--border-slate); padding:12px; border-radius:8px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${item.student_id}</strong>
+                            <span style="color:var(--emerald-green); font-weight:800;">${item.total_score} / ${item.max_paper_marks} Marks</span>
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                            XP: ✨ ${item.total_xp} | Date: ${new Date(item.created_at).toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            });
+            outputBox.innerHTML = html;
+        } catch (err) {
+            outputBox.innerHTML = `<div style="color:red; font-size:13px; text-align:center;">Could not retrieve history from database.</div>`;
+        }
+    }
+</script>
+</body>
+</html>
