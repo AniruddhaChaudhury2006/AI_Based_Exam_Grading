@@ -1,92 +1,46 @@
-```markdown
 # AI-Powered Autonomous Examination Grading & Diagnostics Pipeline
 
-An intelligent, multi-stage assessment platform that reads handwritten student scripts and question paper blueprints, parses complex sectional constraints, executes lenient fractional grading, and surfaces gamified debugging diagnostics.
+Hey there! Welcome to the AI-Powered Autonomous Examination Grading & Diagnostics Pipeline. This project is an advanced, multi-stage assessment platform designed to eliminate the tedious bottlenecks of manual evaluation. By seamlessly combining multimodal AI vision, structured data parsing, relational persistence, and gamified diagnostics, it reads handwritten student scripts and question paper blueprints, parses complex sectional constraints, executes lenient fractional grading, and transforms score deductions into actionable debugging quests.
 
-## Key Features
+# Detailed Code Architecture & Component Explanation
 
-- **Twin-Stream Vision Extraction:** Decoupled pipelines for analyzing master rubrics and parsing handwritten student script pages[cite: 1].
-- **Dynamic Sectional Rule Engine:** Automatically manages section choices and optimizes scoring pools[cite: 1].
-- **Lenient Fractional Grading:** Uses multi-step rubric alignment to award partial credit rather than binary outcomes[cite: 1].
-- **Gamified Diagnostics:** Translates score deductions into "Active Quests" and bug descriptions with XP tracking and celebratory level-up triggers[cite: 1, 3].
-- **Database Persistence & Human-in-the-Loop (HITL):** Saves assessment data to SQLite via SQLAlchemy with real-time score adjustment endpoints[cite: 3, 4, 6, 7].
+To understand how the codebase works under the hood, let's break down each file, its specific responsibilities, and how they interact to form a unified grading pipeline:
 
----
+- **`main.py` (FastAPI Application Server & REST Endpoints):** This serves as the entry point for the entire application backend. It initializes the FastAPI instance, configures CORS middleware, and sets up asynchronous REST routes. It exposes the primary upload endpoint (`/api/v1/grade-autonomous`) which accepts multipart form data containing question paper files and handwritten answer sheet scans. When requests come in, it delegates the files to the grading engine, handles database session commits, and exposes retrieval and manual override endpoints.
+- **`engines.py` (Autonomous Grading Engine & Pydantic Normalization):** This is the core cognitive engine of the project. It integrates with LangChain and Google's Gemini multimodal models to process visual inputs. It runs a twin-stream vision extraction process that analyzes the master rubric separately from the student's messy handwritten script. Furthermore, it defines strict **Pydantic v2 schemas** that enforce data validation, structure the JSON outputs returned by the LLM, handle dynamic score capping, and execute sectional rule evaluations (such as choosing the best $N$ answers out of a given set).
+- **`database.py` (SQLAlchemy Database Session Configuration):** Responsible for managing the persistence layer infrastructure. It initializes the SQLite database engine (`grading_app.db`), creates session local factories, and handles base declarative mapping classes. It ensures thread-safe session management so that API requests can safely read and write evaluation states without blocking or causing race conditions.
+- **`db_models.py` (ORM Models for Assessments and Question Evaluations):** Defines the structural database tables using SQLAlchemy ORM. It establishes relational models such as `Assessment` (storing metadata, student IDs, total scores, and timestamps) and `QuestionEvaluation` (storing granular question-by-question breakdowns, earned marks, rubric alignment notes, and override flags). It maps foreign keys to link individual question evaluations directly back to their parent assessment record.
+- **`index.html` (Frontend Dashboard Interface):** A fully self-contained single-file frontend dashboard built with HTML5, vanilla JavaScript, and modern CSS/Tailwind-inspired utility classes. It provides an intuitive drag-and-drop file upload interface, renders asynchronous processing states, displays real-time score breakdowns, and incorporates interactive Human-in-the-Loop (HITL) score override controls. It also uses **Canvas Confetti** to trigger celebratory animations whenever perfect scores or level-up milestones are achieved.
+- **`requirements.txt` (Python Dependencies):** A clean manifest file specifying exact package versions required to run the project, including `fastapi`, `uvicorn`, `sqlalchemy`, `pydantic`, `langchain-google-genai`, and supporting libraries.
 
-## Detailed Tech Stack Breakdown
+# Key Features
+- **Twin-Stream Vision Extraction:** Uses decoupled pipelines to analyze master rubrics and parse handwritten student script pages separately, preventing layout cross-contamination.
+- **Dynamic Sectional Rule Engine:** Automatically manages section choices (like attempting any 3 questions from Section B) and optimizes scoring pools based on best-answer rules.
+- **Lenient Fractional Grading:** Uses multi-step rubric alignment to award fair partial credit rather than sticking to harsh binary outcomes, deducting incremental points for minor conceptual gaps.
+- **Gamified Diagnostics:** Turns score deductions into "Active Quests" and bug descriptions complete with XP tracking, bug classifications, and celebratory level-up triggers.
+- **Database Persistence & Human-in-the-Loop (HITL):** Saves assessment data straight to SQLite via SQLAlchemy while letting educators make real-time score adjustments on the fly with live database synchronization.
 
-The project relies on a modern, lightweight, and robust technology stack optimized for multimodal AI processing and rapid prototyping:
-
-* **Backend Framework (`FastAPI`):** Powers the asynchronous REST API server, handling multipart form uploads, dependency injection, and automatic OpenAPI documentation generation[cite: 4].
-* **Database & ORM (`SQLite` & `SQLAlchemy`):** Provides zero-configuration relational data persistence for saving assessment records, historical performance metrics, and question evaluations[cite: 4, 6, 7].
-* **Data Validation & Typing (`Pydantic v2`):** Enforces strict structural boundaries, model validation, and dynamic sectional calculations for all AI-generated assessment payloads[cite: 1].
-* **Multimodal AI Engine (`LangChain Google GenAI` / `Gemini 2.5 Flash`):** Serves as the core intelligence engine responsible for visual layout parsing, structured rubric extraction, raw text transcription, and rubric-based grading[cite: 1].
-* **Frontend Interface (`HTML5`, `Vanilla JavaScript`, `CSS3`, `Canvas Confetti`):** Implements a clean, single-file dashboard (`index.html`) that handles asynchronous API requests, dynamic state updates, score overrides, and interactive celebration animations[cite: 3].
-
----
-
-## Project Structure
-
-```text
+# Project Structure
 IEDC_APP/
-├── main.py            # FastAPI application server and REST endpoints[cite: 4]
-├── engines.py         # Autonomous grading engine & Pydantic normalization schemas[cite: 1]
-├── database.py        # SQLAlchemy database session configuration[cite: 6]
-├── db_models.py       # ORM models for assessments and question evaluations[cite: 7]
-├── index.html         # Frontend dashboard interface[cite: 3]
+├── main.py            # FastAPI application server and REST endpoints
+├── engines.py         # Autonomous grading engine & Pydantic normalization schemas
+├── database.py        # SQLAlchemy database session configuration
+├── db_models.py       # ORM models for assessments and question evaluations
+├── index.html         # Frontend dashboard interface
 └── requirements.txt   # Python dependencies
 
-```
+# Setup & Installation
+1. Install Dependencies:
+   pip install -r requirements.txt
+2. Configure Environment Variable:
+   export GEMINI_API_KEY="your-google-gemini-api-key"
+3. Run the Backend Server:
+   python main.py
+   (The server will spin up locally at http://127.0.0.1:8000, and grading_app.db will generate automatically)
+4. Launch the Dashboard:
+   Open index.html right in your web browser or serve it via a local static server to start grading.
 
----
-
-## Setup & Installation
-
-### 1. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-
-```
-
-### 2. Configure Environment Variable
-
-Set your Gemini API key in your environment:
-
-```bash
-export GEMINI_API_KEY="your-google-gemini-api-key"
-
-```
-
-### 3. Run the Backend Server
-
-```bash
-python main.py
-
-```
-
-The server will start locally at `http://127.0.0.1:8000`, and the database (`grading_app.db`) will generate automatically.
-
-### 4. Launch the Dashboard
-
-Open `index.html` directly in your browser or serve it via a local static server to interact with the grading interface.
-
----
-
-## API Endpoints Reference
-
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| **POST** | `/api/v1/grade-autonomous` | Upload question papers and answer sheets to run the grading pipeline.
-
- |
-| **GET** | `/api/v1/assessments` | Fetch all historical assessment records.
-
- |
-| **PUT** | `/api/v1/question-evaluation/{eval_id}/override` | Perform manual score overrides with live database synchronization.
-
- |
-
-```
-
-```
+# API Endpoints Reference
+- POST /api/v1/grade-autonomous: Upload your question papers and answer sheets to kick off the grading pipeline.
+- GET /api/v1/assessments: Fetch all saved historical assessment records from the database.
+- PUT /api/v1/question-evaluation/{eval_id}/override: Perform manual score overrides with live database synchronization.
