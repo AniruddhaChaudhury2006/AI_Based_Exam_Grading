@@ -1,6 +1,6 @@
 # AI-Powered Autonomous Examination Grading & Diagnostics Pipeline
 
-Hey there! Welcome to the AI-Powered Autonomous Examination Grading & Diagnostics Pipeline. This project is an advanced, multi-stage assessment platform designed to eliminate the tedious bottlenecks of manual evaluation. By seamlessly combining multimodal AI vision, structured data parsing, relational persistence, and gamified diagnostics, it reads handwritten student scripts and question paper blueprints, parses complex sectional constraints, executes lenient fractional grading, and transforms score deductions into actionable debugging quests.
+Welcome to the AI-Powered Autonomous Examination Grading & Diagnostics Pipeline. This project is an advanced, multi-stage assessment platform designed to eliminate the tedious bottlenecks of manual evaluation. By seamlessly combining multimodal AI vision, structured data parsing, relational persistence, and gamified diagnostics, it reads handwritten student scripts and question paper blueprints, parses complex sectional constraints, executes lenient fractional grading, and transforms score deductions into actionable debugging quests.
 
 # Detailed Code Architecture & Component Explanation
 
